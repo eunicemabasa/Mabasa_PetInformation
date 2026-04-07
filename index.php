@@ -1,0 +1,112 @@
+<?php 
+require_once 'db.php'; 
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pets Information</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar { background: linear-gradient(135deg, #e83e8c, #c2185b); }
+        .card { transition: transform 0.2s; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card:hover { transform: translateY(-4px); }
+        .pet-img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px 8px 0 0; }
+        .pet-img-placeholder { 
+            width: 100%; height: 200px; background: #f0f0f0; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 60px; border-radius: 8px 8px 0 0; 
+        }
+        .badge-species { background-color: #e83e8c; }
+        .btn-add { background: linear-gradient(135deg, #e83e8c, #c2185b); border: none; }
+        .btn-add:hover { background: linear-gradient(135deg, #c2185b, #880e4f); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark px-4 py-3 mb-4">
+    <span class="navbar-brand fs-4 fw-bold">
+        <i class="bi bi-heart-fill me-2"></i>Pets Information
+    </span>
+    <a href="create.php" class="btn btn-light fw-semibold">
+        <i class="bi bi-plus-circle me-1"></i> Add New Pet
+    </a>
+</nav>
+
+<div class="container">
+
+    <?php if (isset($_GET['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <?php
+                $msg = $_GET['success'];
+                if ($msg === 'created') echo 'Pet added successfully!';
+                elseif ($msg === 'updated') echo 'Pet updated successfully!';
+                elseif ($msg === 'deleted') echo 'Pet deleted successfully!';
+            ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php
+        $stmt = $pdo->query("SELECT * FROM `" . TABLE_PETS . "` ORDER BY created_at DESC");
+        $pets = $stmt->fetchAll();
+    ?>
+
+    <?php if (empty($pets)): ?>
+        <div class="text-center py-5">
+            <div style="font-size: 80px;">🐾</div>
+            <h3 class="text-muted mt-3">No pets found</h3>
+            <p class="text-muted">Start by adding your first pet!</p>
+            <a href="create.php" class="btn btn-add btn-lg text-white mt-2">
+                <i class="bi bi-plus-circle me-1"></i> Add First Pet
+            </a>
+        </div>
+    <?php else: ?>
+        <div class="row g-4">
+            <?php foreach ($pets as $pet): ?>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card h-100">
+                    <?php if (!empty($pet['image']) && file_exists('uploads/' . $pet['image'])): ?>
+                        <img src="uploads/<?= htmlspecialchars($pet['image']) ?>" 
+                             alt="<?= htmlspecialchars($pet['name']) ?>" 
+                             class="pet-img">
+                    <?php else: ?>
+                        <div class="pet-img-placeholder">🐾</div>
+                    <?php endif; ?>
+                    
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold"><?= htmlspecialchars($pet['name']) ?></h5>
+                        <span class="badge badge-species text-white mb-2"><?= htmlspecialchars($pet['species']) ?></span>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="bi bi-tag me-1"></i><strong>Breed:</strong> <?= htmlspecialchars($pet['breed']) ?></li>
+                            <li><i class="bi bi-calendar me-1"></i><strong>Age:</strong> <?= htmlspecialchars($pet['age']) ?> yr(s)</li>
+                            <li><i class="bi bi-person me-1"></i><strong>Owner:</strong> <?= htmlspecialchars($pet['owner_name']) ?></li>
+                        </ul>
+                        <div class="d-flex gap-2">
+                            <a href="edit.php?id=<?= $pet['id'] ?>" 
+                               class="btn btn-warning btn-sm flex-fill text-white">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <a href="delete.php?id=<?= $pet['id'] ?>" 
+                               class="btn btn-danger btn-sm flex-fill"
+                               onclick="return confirm('Are you sure you want to delete <?= htmlspecialchars(addslashes($pet['name'])) ?>?')">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <p class="text-muted text-end mt-4 small">Total: <?= count($pets) ?> pet(s) on record</p>
+    <?php endif; ?>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
